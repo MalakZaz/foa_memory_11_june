@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+
+results/*
+!results/.gitkeep
+
+.vscode/
+
+*.log
+
+.env
+.DS_Store
