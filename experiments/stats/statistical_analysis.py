@@ -15,7 +15,6 @@ Provides rigorous statistical validation of FOA vs baselines:
     - Ranking of algorithms
 
 Designed for IEEE / Elsevier experimental sections.
-
 ===========================================================
 """
 
@@ -49,11 +48,21 @@ def compute_stats(data):
 def confidence_interval(data):
     """
     95% confidence interval for mean fitness.
+
+    If the data have zero variance, the confidence interval
+    collapses to the mean value.
     """
 
     data = np.array(data)
 
     mean = np.mean(data)
+
+    if len(data) < 2 or np.std(data) == 0:
+        return {
+            "lower": float(mean),
+            "upper": float(mean)
+        }
+
     sem = stats.sem(data)
 
     ci = stats.t.interval(
@@ -74,10 +83,25 @@ def confidence_interval(data):
 # ===========================================================
 def t_test(foa, baseline):
     """
-    Student t-test for performance comparison.
+    Welch Student t-test for performance comparison.
     """
 
-    t_stat, p_value = stats.ttest_ind(foa, baseline, equal_var=False)
+    foa = np.array(foa)
+    baseline = np.array(baseline)
+
+    if np.std(foa) == 0 and np.std(baseline) == 0:
+        p_value = 1.0 if np.mean(foa) == np.mean(baseline) else 0.0
+        return {
+            "t_stat": 0.0,
+            "p_value": float(p_value),
+            "significant": bool(p_value < 0.05)
+        }
+
+    t_stat, p_value = stats.ttest_ind(
+        foa,
+        baseline,
+        equal_var=False
+    )
 
     return {
         "t_stat": float(t_stat),
@@ -91,10 +115,20 @@ def t_test(foa, baseline):
 # ===========================================================
 def wilcoxon_test(foa, baseline):
     """
-    Non-parametric comparison test.
+    Mann-Whitney U test.
+
+    The alternative hypothesis is that FOA obtains larger
+    fitness values than the compared baseline.
     """
 
-    stat, p_value = stats.mannwhitneyu(foa, baseline, alternative="greater")
+    foa = np.array(foa)
+    baseline = np.array(baseline)
+
+    stat, p_value = stats.mannwhitneyu(
+        foa,
+        baseline,
+        alternative="greater"
+    )
 
     return {
         "u_stat": float(stat),
@@ -108,31 +142,51 @@ def wilcoxon_test(foa, baseline):
 # ===========================================================
 def plot_boxplot(results_dict, save_path="results/v0/boxplot.png"):
     """
-    Generate comparison boxplot.
-
-    results_dict example:
-        {
-            "FOA": [...],
-            "PSO": [...],
-            "Greedy": [...],
-            "Random": [...]
-        }
+    Generate a clean publication-ready comparison boxplot.
     """
 
-    plt.figure(figsize=(8, 5))
+    fig, ax = plt.subplots(
+        figsize=(8, 5),
+        facecolor="white"
+    )
+
+    ax.set_facecolor("white")
 
     labels = list(results_dict.keys())
     data = [results_dict[k] for k in labels]
 
-    plt.boxplot(data, labels=labels)
+    ax.boxplot(
+        data,
+        labels=labels
+    )
 
-    plt.title("Statistical Comparison of FOA vs Baselines")
-    plt.ylabel("Fitness")
-    plt.grid(True)
+    ax.set_title(
+        "Statistical Comparison of FOA vs Baselines",
+        fontsize=12,
+        fontweight="bold"
+    )
 
-    plt.tight_layout()
-    plt.savefig(save_path, dpi=300)
-    plt.show()
+    ax.set_ylabel(
+        "Fitness",
+        fontsize=11
+    )
+
+    ax.grid(
+        axis="y",
+        linestyle="--",
+        alpha=0.3
+    )
+
+    fig.tight_layout()
+
+    fig.savefig(
+        save_path,
+        dpi=300,
+        facecolor="white",
+        bbox_inches="tight"
+    )
+
+    plt.close(fig)
 
 
 # ===========================================================
@@ -145,19 +199,16 @@ def statistical_report(results_dict):
 
     report = {}
 
-    # ---- basic stats
     report["basic_stats"] = {
         k: compute_stats(v)
         for k, v in results_dict.items()
     }
 
-    # ---- confidence intervals
     report["confidence_intervals"] = {
         k: confidence_interval(v)
         for k, v in results_dict.items()
     }
 
-    # ---- FOA comparisons
     foa = results_dict["FOA"]
 
     report["tests"] = {
