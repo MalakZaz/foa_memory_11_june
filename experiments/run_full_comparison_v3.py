@@ -1,6 +1,6 @@
 """
 ===========================================================
- FILE: run_full_comparison_v3.py 14 juin 2026
+ FILE: run_full_comparison_v3.py
  PURPOSE: Full comparison including FOA-Memory V3
 ===========================================================
 """
@@ -12,7 +12,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from src.config import *
-
 
 from src.utils.seed import set_seed
 from src.scenario.scenario_generator import generate_scenario
@@ -29,36 +28,55 @@ from src.baselines.greedy import run_greedy
 
 
 SAVE_DIR = "results/v3_full_comparison"
-config_dict = {
-    "EXPERIMENT_NAME": EXPERIMENT_NAME,
-    "SEED": SEED,
-    "N": N,
-    "M": M,
-    "P_TX": P_TX,
-    "SIGMA2": SIGMA2,
-    "SINR_MIN": SINR_MIN,
-    "R_MIN": R_MIN,
-    "USE_QOS": USE_QOS,
-    "DELTA_T": DELTA_T,
-    "POP_SIZE": POP_SIZE,
-    "ITERATIONS": ITERATIONS,
-    "RUNS": RUNS,
-    "ETA": ETA,
-    "BAD_THRESHOLD": BAD_THRESHOLD,
-    "BLOOM_SIZE": BLOOM_SIZE,
-    "BLOOM_HASHES": BLOOM_HASHES,
-    "BLOOM_DECAY": BLOOM_DECAY,
-    "BLOOM_RECOVERY": BLOOM_RECOVERY,
-    "BLOOM_FAMILIARITY_THRESHOLD": BLOOM_FAMILIARITY_THRESHOLD
-}
 
-with open(os.path.join(SAVE_DIR, "scenario_config.json"), "w") as f:
-    json.dump(config_dict, f, indent=4)
-#-----------------------header---------------------
+print(f"Creating output directory: {SAVE_DIR}")
+os.makedirs(SAVE_DIR, exist_ok=True)
+
+assert os.path.exists(SAVE_DIR), (
+    f"Failed to create output directory: {SAVE_DIR}"
+)
+
+
+def save_scenario_config():
+
+    config_dict = {
+        "EXPERIMENT_NAME": EXPERIMENT_NAME,
+        "SEED": SEED,
+        "N": N,
+        "M": M,
+        "P_TX": P_TX,
+        "SIGMA2": SIGMA2,
+        "SINR_MIN": SINR_MIN,
+        "R_MIN": R_MIN,
+        "USE_QOS": USE_QOS,
+        "DELTA_T": DELTA_T,
+        "POP_SIZE": POP_SIZE,
+        "ITERATIONS": ITERATIONS,
+        "RUNS": RUNS,
+        "ETA": ETA,
+        "BAD_THRESHOLD": BAD_THRESHOLD,
+        "BLOOM_SIZE": BLOOM_SIZE,
+        "BLOOM_HASHES": BLOOM_HASHES,
+        "BLOOM_DECAY": BLOOM_DECAY,
+        "BLOOM_RECOVERY": BLOOM_RECOVERY,
+        "BLOOM_FAMILIARITY_THRESHOLD": BLOOM_FAMILIARITY_THRESHOLD
+    }
+
+    path = os.path.join(
+        SAVE_DIR,
+        "scenario_config.json"
+    )
+
+    with open(path, "w") as f:
+        json.dump(config_dict, f, indent=4)
+
+    print(f"Scenario configuration saved to: {path}")
+
+
 def print_experiment_header():
 
     print("\n" + "=" * 80)
-    print(" SCENARIO 01: N20_M10_QoS_ON")
+    print(f" {EXPERIMENT_NAME}")
     print("=" * 80)
 
     parameters = [
@@ -69,14 +87,24 @@ def print_experiment_header():
         ("POP_SIZE", POP_SIZE, "Number of candidate solutions per iteration."),
         ("ETA", ETA, "FOA exploration step controlling movement intensity."),
         ("SEED", SEED, "Base random seed for reproducibility."),
+        ("P_TX", P_TX, "Transmission power used in SINR and rate computation."),
+        ("SIGMA2", SIGMA2, "Noise power used in SINR computation."),
+        ("SINR_MIN", SINR_MIN, "Minimum SINR required for QoS satisfaction."),
+        ("R_MIN", R_MIN, "Minimum data rate required for QoS satisfaction."),
+        ("USE_QOS", USE_QOS, "Enables or disables QoS-aware repair/evaluation."),
         ("BAD_THRESHOLD", BAD_THRESHOLD, "Threshold used to avoid familiar poor solutions."),
+        ("BLOOM_SIZE", BLOOM_SIZE, "Number of memory traces in the Bloom filter."),
+        ("BLOOM_HASHES", BLOOM_HASHES, "Number of hash projections per solution."),
+        ("BLOOM_DECAY", BLOOM_DECAY, "Rate at which repeated solutions become familiar."),
+        ("BLOOM_RECOVERY", BLOOM_RECOVERY, "Rate at which novelty recovers over time."),
+        ("BLOOM_FAMILIARITY_THRESHOLD", BLOOM_FAMILIARITY_THRESHOLD, "Novelty threshold below which a solution is considered familiar."),
     ]
 
-    print(f"{'Parameter':<18} {'Value':<15} {'Role'}")
+    print(f"{'Parameter':<30} {'Value':<15} {'Role'}")
     print("-" * 80)
 
     for name, value, role in parameters:
-        print(f"{name:<18} {str(value):<15} {role}")
+        print(f"{name:<30} {str(value):<15} {role}")
 
     print("-" * 80)
     print("Compared algorithms:")
@@ -88,13 +116,12 @@ def print_experiment_header():
     print("  - Random Search")
     print("  - Greedy")
     print("=" * 80)
-#------------------------end header
-os.makedirs(SAVE_DIR, exist_ok=True)
 
 
 def build_fitness_fn(scenario):
 
     def fitness_fn(alpha, **_):
+
         return fitness_function(
             alpha,
             h=scenario["h"],
@@ -114,6 +141,7 @@ def random_history(iterations, N, M, scenario):
     best_so_far = -np.inf
 
     for _ in range(iterations):
+
         _, fit = run_random_search(
             iterations=1,
             N=N,
@@ -121,7 +149,11 @@ def random_history(iterations, N, M, scenario):
             scenario=scenario
         )
 
-        best_so_far = max(best_so_far, fit)
+        best_so_far = max(
+            best_so_far,
+            fit
+        )
+
         history.append(best_so_far)
 
     return history
@@ -129,7 +161,11 @@ def random_history(iterations, N, M, scenario):
 
 def greedy_history(iterations, N, M, scenario):
 
-    _, fit = run_greedy(N, M, scenario)
+    _, fit = run_greedy(
+        N,
+        M,
+        scenario
+    )
 
     return [fit] * iterations
 
@@ -137,15 +173,19 @@ def greedy_history(iterations, N, M, scenario):
 def plot_convergence(df):
 
     summary = (
-        df.groupby(["algorithm", "iteration"])["best_fitness"]
+        df.groupby(
+            ["algorithm", "iteration"]
+        )["best_fitness"]
         .mean()
         .reset_index()
     )
 
-    fig, ax = plt.subplots(figsize=(11, 6), facecolor="white")
-    ax.set_facecolor("white")
+    fig, ax = plt.subplots(
+        figsize=(11, 6),
+        facecolor="white"
+    )
 
-    algorithms = summary["algorithm"].unique()
+    ax.set_facecolor("white")
 
     markers = {
         "FOA": "o",
@@ -157,9 +197,11 @@ def plot_convergence(df):
         "Greedy": "P"
     }
 
-    for algo in algorithms:
+    for algo in summary["algorithm"].unique():
 
-        data = summary[summary["algorithm"] == algo]
+        data = summary[
+            summary["algorithm"] == algo
+        ]
 
         ax.plot(
             data["iteration"],
@@ -172,15 +214,24 @@ def plot_convergence(df):
         )
 
     ax.set_xlabel("Iteration", fontsize=12)
+
     ax.set_ylabel("Average Best Fitness", fontsize=12)
+
     ax.set_title(
         f"Average Convergence over {RUNS} Independent Runs",
         fontsize=14,
         fontweight="bold"
     )
 
-    ax.grid(True, linestyle="--", alpha=0.4)
-    ax.legend(frameon=True)
+    ax.grid(
+        True,
+        linestyle="--",
+        alpha=0.4
+    )
+
+    ax.legend(
+        frameon=True
+    )
 
     fig.tight_layout()
 
@@ -189,7 +240,13 @@ def plot_convergence(df):
         f"convergence_all_N{N}_M{M}_RUNS{RUNS}_ITER{ITERATIONS}.png"
     )
 
-    fig.savefig(path, dpi=300, facecolor="white", bbox_inches="tight")
+    fig.savefig(
+        path,
+        dpi=300,
+        facecolor="white",
+        bbox_inches="tight"
+    )
+
     plt.close(fig)
 
     print(f"Saved convergence plot: {path}")
@@ -197,18 +254,26 @@ def plot_convergence(df):
 
 def plot_memory_metrics(memory_df):
 
-    fig, ax = plt.subplots(figsize=(10, 6), facecolor="white")
-    ax.set_facecolor("white")
-
     summary = (
-        memory_df.groupby(["algorithm", "iteration"])["skipped"]
+        memory_df.groupby(
+            ["algorithm", "iteration"]
+        )["skipped"]
         .mean()
         .reset_index()
     )
 
+    fig, ax = plt.subplots(
+        figsize=(10, 6),
+        facecolor="white"
+    )
+
+    ax.set_facecolor("white")
+
     for algo in summary["algorithm"].unique():
 
-        data = summary[summary["algorithm"] == algo]
+        data = summary[
+            summary["algorithm"] == algo
+        ]
 
         ax.plot(
             data["iteration"],
@@ -221,11 +286,24 @@ def plot_memory_metrics(memory_df):
         )
 
     ax.set_xlabel("Iteration", fontsize=12)
-    ax.set_ylabel("Average Skipped Evaluations", fontsize=12)
-    ax.set_title("Memory-Based Evaluation Avoidance", fontsize=14, fontweight="bold")
 
-    ax.grid(True, linestyle="--", alpha=0.4)
-    ax.legend(frameon=True)
+    ax.set_ylabel("Average Skipped Evaluations", fontsize=12)
+
+    ax.set_title(
+        "Memory-Based Evaluation Avoidance",
+        fontsize=14,
+        fontweight="bold"
+    )
+
+    ax.grid(
+        True,
+        linestyle="--",
+        alpha=0.4
+    )
+
+    ax.legend(
+        frameon=True
+    )
 
     fig.tight_layout()
 
@@ -234,7 +312,13 @@ def plot_memory_metrics(memory_df):
         f"memory_skipped_N{N}_M{M}_RUNS{RUNS}_ITER{ITERATIONS}.png"
     )
 
-    fig.savefig(path, dpi=300, facecolor="white", bbox_inches="tight")
+    fig.savefig(
+        path,
+        dpi=300,
+        facecolor="white",
+        bbox_inches="tight"
+    )
+
     plt.close(fig)
 
     print(f"Saved memory plot: {path}")
@@ -242,14 +326,20 @@ def plot_memory_metrics(memory_df):
 
 def plot_v3_novelty(v3_df):
 
-    fig, ax = plt.subplots(figsize=(10, 6), facecolor="white")
-    ax.set_facecolor("white")
-
     summary = (
-        v3_df.groupby("iteration")[["bloom_occupancy", "mean_novelty"]]
+        v3_df.groupby("iteration")[
+            ["bloom_occupancy", "mean_novelty"]
+        ]
         .mean()
         .reset_index()
     )
+
+    fig, ax = plt.subplots(
+        figsize=(10, 6),
+        facecolor="white"
+    )
+
+    ax.set_facecolor("white")
 
     ax.plot(
         summary["iteration"],
@@ -272,15 +362,24 @@ def plot_v3_novelty(v3_df):
     )
 
     ax.set_xlabel("Iteration", fontsize=12)
+
     ax.set_ylabel("Value", fontsize=12)
+
     ax.set_title(
         "Time-Sensitive Bloom Memory Dynamics in FOA-Memory V3",
         fontsize=14,
         fontweight="bold"
     )
 
-    ax.grid(True, linestyle="--", alpha=0.4)
-    ax.legend(frameon=True)
+    ax.grid(
+        True,
+        linestyle="--",
+        alpha=0.4
+    )
+
+    ax.legend(
+        frameon=True
+    )
 
     fig.tight_layout()
 
@@ -289,7 +388,13 @@ def plot_v3_novelty(v3_df):
         f"v3_bloom_dynamics_N{N}_M{M}_RUNS{RUNS}_ITER{ITERATIONS}.png"
     )
 
-    fig.savefig(path, dpi=300, facecolor="white", bbox_inches="tight")
+    fig.savefig(
+        path,
+        dpi=300,
+        facecolor="white",
+        bbox_inches="tight"
+    )
+
     plt.close(fig)
 
     print(f"Saved V3 novelty plot: {path}")
@@ -297,10 +402,9 @@ def plot_v3_novelty(v3_df):
 
 if __name__ == "__main__":
 
-    print("\n================================================")
-    print(" FULL COMPARISON WITH FOA-MEMORY V3")
-
     print_experiment_header()
+
+    save_scenario_config()
 
     rows = []
     memory_rows = []
@@ -311,50 +415,96 @@ if __name__ == "__main__":
 
         seed = SEED + run
 
-        print(f"Run {run + 1}/{RUNS} | seed={seed}")
+        print(f"\nRun {run + 1}/{RUNS} | seed={seed}")
+
+        scenario = generate_scenario(
+            N,
+            M,
+            seed=seed
+        )
+
+        fitness_fn = build_fitness_fn(
+            scenario
+        )
 
         set_seed(seed)
 
-        scenario = generate_scenario(N, M, seed=seed)
-        fitness_fn = build_fitness_fn(scenario)
-
-        # FOA
-        set_seed(seed)
         _, fit_foa, hist_foa = run_foa(
-            ITERATIONS, POP_SIZE, N, M, ETA, scenario, fitness_fn
+            ITERATIONS,
+            POP_SIZE,
+            N,
+            M,
+            ETA,
+            scenario,
+            fitness_fn
         )
 
-        # FOA-Memory V2
         set_seed(seed)
+
         _, fit_v2, hist_v2, skipped_v2, mem_v2 = run_foa_memory_v2(
-            ITERATIONS, POP_SIZE, N, M, ETA, scenario, fitness_fn, BAD_THRESHOLD
+            ITERATIONS,
+            POP_SIZE,
+            N,
+            M,
+            ETA,
+            scenario,
+            fitness_fn,
+            BAD_THRESHOLD
         )
 
-        # FOA-Memory V3
         set_seed(seed)
+
         _, fit_v3, hist_v3, skipped_v3, occ_v3, mem_v3, nov_v3 = run_foa_memory_v3(
-            ITERATIONS, POP_SIZE, N, M, ETA, scenario, fitness_fn, BAD_THRESHOLD
+            ITERATIONS,
+            POP_SIZE,
+            N,
+            M,
+            ETA,
+            scenario,
+            fitness_fn,
+            BAD_THRESHOLD
         )
 
-        # PSO
         set_seed(seed)
+
         _, fit_pso, hist_pso = run_pso(
-            ITERATIONS, POP_SIZE, N, M, scenario, fitness_fn
+            ITERATIONS,
+            POP_SIZE,
+            N,
+            M,
+            scenario,
+            fitness_fn
         )
 
-        # GWO
         set_seed(seed)
+
         _, fit_gwo, hist_gwo = run_gwo(
-            ITERATIONS, POP_SIZE, N, M, scenario, fitness_fn
+            ITERATIONS,
+            POP_SIZE,
+            N,
+            M,
+            scenario,
+            fitness_fn
         )
 
-        # Random
         set_seed(seed)
-        hist_random = random_history(ITERATIONS, N, M, scenario)
+
+        hist_random = random_history(
+            ITERATIONS,
+            N,
+            M,
+            scenario
+        )
+
         fit_random = hist_random[-1]
 
-        # Greedy
-        hist_greedy = greedy_history(ITERATIONS, N, M, scenario)
+        hist_greedy = greedy_history(
+            ITERATIONS,
+            N,
+            M,
+            scenario
+        )
+
         fit_greedy = hist_greedy[-1]
 
         histories = {
@@ -368,7 +518,12 @@ if __name__ == "__main__":
         }
 
         for algo, history in histories.items():
-            for iteration, value in enumerate(history, start=1):
+
+            for iteration, value in enumerate(
+                history,
+                start=1
+            ):
+
                 rows.append({
                     "run": run + 1,
                     "seed": seed,
@@ -428,7 +583,9 @@ if __name__ == "__main__":
             f"V2={fit_v2:.2f} | "
             f"V3={fit_v3:.2f} | "
             f"PSO={fit_pso:.2f} | "
-            f"GWO={fit_gwo:.2f}"
+            f"GWO={fit_gwo:.2f} | "
+            f"Random={fit_random:.2f} | "
+            f"Greedy={fit_greedy:.2f}"
         )
 
     df = pd.DataFrame(rows)
@@ -437,36 +594,79 @@ if __name__ == "__main__":
     final_df = pd.DataFrame(final_results)
 
     df.to_csv(
-        os.path.join(SAVE_DIR, "convergence_histories.csv"),
+        os.path.join(
+            SAVE_DIR,
+            "convergence_histories.csv"
+        ),
         index=False
     )
 
     memory_df.to_csv(
-        os.path.join(SAVE_DIR, "memory_metrics.csv"),
+        os.path.join(
+            SAVE_DIR,
+            "memory_metrics.csv"
+        ),
         index=False
     )
 
     v3_df.to_csv(
-        os.path.join(SAVE_DIR, "v3_bloom_dynamics.csv"),
+        os.path.join(
+            SAVE_DIR,
+            "v3_bloom_dynamics.csv"
+        ),
         index=False
     )
 
     final_df.to_csv(
-        os.path.join(SAVE_DIR, "final_results_per_run.csv"),
+        os.path.join(
+            SAVE_DIR,
+            "final_results_per_run.csv"
+        ),
         index=False
     )
 
-    summary = final_df.drop(columns=["run", "seed"]).agg(["mean", "std", "min", "max"]).T
-
-    summary.to_csv(
-        os.path.join(SAVE_DIR, "summary_table.csv")
+    summary = (
+        final_df
+        .drop(
+            columns=[
+                "run",
+                "seed"
+            ]
+        )
+        .agg([
+            "mean",
+            "std",
+            "min",
+            "max"
+        ])
+        .T
     )
 
-    with open(os.path.join(SAVE_DIR, "summary_table.json"), "w") as f:
-        json.dump(summary.to_dict(), f, indent=4)
+    summary.to_csv(
+        os.path.join(
+            SAVE_DIR,
+            "summary_table.csv"
+        )
+    )
+
+    with open(
+        os.path.join(
+            SAVE_DIR,
+            "summary_table.json"
+        ),
+        "w"
+    ) as f:
+
+        json.dump(
+            summary.to_dict(),
+            f,
+            indent=4
+        )
 
     plot_convergence(df)
+
     plot_memory_metrics(memory_df)
+
     plot_v3_novelty(v3_df)
 
     print("\n================================================")
