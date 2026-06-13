@@ -1,23 +1,46 @@
+"""
+===========================================================
+ FILE: test_fitness_memory.py
+ PURPOSE: Test exact fitness memory
+===========================================================
+"""
+
 import numpy as np
 
 from src.memory.fitness_memory import FitnessMemory
+from src.config import N, M
 
 
-memory = FitnessMemory()
+if __name__ == "__main__":
 
-alpha = np.array([
-    [1, 0, 0],
-    [0, 1, 0]
-])
+    memory = FitnessMemory()
 
-print("Contains before:", memory.contains(alpha))
+    alpha_1 = np.zeros((N, M), dtype=int)
+    alpha_1[0, 0] = 1
+    alpha_1[1, 1] = 1
 
-memory.add(alpha, 100.0)
+    alpha_2 = np.zeros((N, M), dtype=int)
+    alpha_2[2, 2] = 1
 
-print("Contains after :", memory.contains(alpha))
-print("Stored fitness :", memory.get_fitness(alpha))
+    fitness_1 = 1500.0
 
-memory.add(alpha, 120.0)
+    print("\n========================================")
+    print(" FITNESS MEMORY TEST")
+    print("========================================")
 
-print("Updated fitness:", memory.get_fitness(alpha))
-print("Memory size    :", memory.size())
+    print("Before adding alpha_1:")
+    print("Contains alpha_1:", memory.contains(alpha_1))
+    print("Fitness alpha_1 :", memory.get_fitness(alpha_1))
+
+    memory.add(alpha_1, fitness_1)
+
+    print("\nAfter adding alpha_1:")
+    print("Contains alpha_1:", memory.contains(alpha_1))
+    print("Fitness alpha_1 :", memory.get_fitness(alpha_1))
+
+    print("\nTesting unseen alpha_2:")
+    print("Contains alpha_2:", memory.contains(alpha_2))
+    print("Fitness alpha_2 :", memory.get_fitness(alpha_2))
+
+    print("\nMemory size:", memory.size())
+    print("========================================")

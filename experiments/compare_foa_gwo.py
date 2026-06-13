@@ -208,12 +208,12 @@ def plot_comparison(df):
             label=styles[algo]["label"]
         )
 
-        ax.fill_between(
-            x,
-            mean - std,
-            mean + std,
-            alpha=0.10
-        )
+        #ax.fill_between(
+         #   x,
+          #  mean - std,
+           # mean + std,
+            #alpha=0.10
+        #)
 
         final_results.append(
             f"{algo}: {mean.iloc[-1]:.2f} ± {std.iloc[-1]:.2f}"

@@ -115,7 +115,7 @@ def plot_convergence():
        # mean - std,
        # mean + std,
        # alpha=0.10
-    #)
+    #x``)
         final_results.append(
             f"{styles[algo]['label']}: "
             f"{mean.iloc[-1]:.1f}"

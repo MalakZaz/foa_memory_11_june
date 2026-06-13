@@ -234,12 +234,12 @@ def plot_comparison(df, average_skipped, avoidance_rate):
             label=styles[algo]["label"]
         )
 
-        ax.fill_between(
-            x,
-            mean - std,
-            mean + std,
-            alpha=0.10
-        )
+        #ax.fill_between(
+          #  x,
+           # mean - std,
+          #  mean + std,
+          #  alpha=0.10
+        #)
 
         final_results.append(
             f"{styles[algo]['label']}: {mean.iloc[-1]:.2f}"

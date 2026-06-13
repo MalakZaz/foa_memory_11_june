@@ -26,7 +26,7 @@ The exclusivity constraint is enforced during generation:
 """
 
 import numpy as np
-
+from config import N, M, POPULATION
 
 # ===========================================================
 # GENERATE ONE INDIVIDUAL

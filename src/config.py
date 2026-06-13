@@ -48,7 +48,7 @@ ETA = 0.1
 # ===========================================================
 # EXPERIMENTAL PARAMETERS
 # ===========================================================
-RUNS = 30               # Number of independent runs
+RUNS = 3               # Number of independent runs
 
 # ===========================================================
 # MEMORY PARAMETERS
@@ -62,5 +62,19 @@ BAD_THRESHOLD = 0.95    # Selected threshold after sensitivity analysis
 # ===========================================================
 # GWO PARAMETERS
 # ===========================================================
+
 GWO_POP_SIZE = POP_SIZE
 GWO_ITERATIONS = ITERATIONS
+
+# ==========================================================
+# BLOOM FILTER PARAMETERS
+# ==========================================================
+BLOOM_SIZE = 1000       # Number of bits in Bloom filter
+
+BLOOM_HASHES = 5        # Number of hash functions
+
+BLOOM_DECAY = 0.5       # aggressive decay for active traces
+
+BLOOM_RECOVERY = 0.01  # slow recovery toward novelty
+
+BLOOM_FAMILIARITY_THRESHOLD = 0.5

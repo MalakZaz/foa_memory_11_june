@@ -193,8 +193,11 @@ if __name__ == "__main__":
     with open("results/v0/stats_report.json", "w") as f:
         json.dump(report, f, indent=4)
 
-    plot_boxplot(results, "results/v0/boxplot_N{N}_M{M}_RUNS{RUNS}_ITERATIONS{ITERATIONS}.png")
-
+    #plot_boxplot(results, "results/v0/boxplot_N{N}_M{M}_RUNS{RUNS}_ITERATIONS{ITERATIONS}.png")
+    plot_boxplot(
+        results,
+        f"results/v0/boxplot_N{N}_M{M}_RUNS{RUNS}_ITERATIONS{ITERATIONS}.png"
+    )
     #plot_convergence()
 
     summary = {

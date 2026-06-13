@@ -1,5 +1,5 @@
 __pycache__/
-*.pyc
+*.pyc[cod]
 
 results/*
 !results/.gitkeep
@@ -7,6 +7,9 @@ results/*
 .vscode/
 
 *.log
+
+# Configuration files containing credentials
+config.py 
 
 .env
 .DS_Store

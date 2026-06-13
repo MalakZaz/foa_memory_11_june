@@ -20,7 +20,7 @@ from src.foa.population import initialize_population
 from src.foa.movement import update
 from src.memory.fitness_memory import FitnessMemory
 from src.core.repair import repair_solution
-from src.config import USE_QOS
+from src.config import USE_QOS, BAD_THRESHOLD
 
 
 def binarize(X):
@@ -37,7 +37,7 @@ def run_foa_memory_v2(iterations,
                       eta,
                       scenario,
                       fitness_fn,
-                      bad_threshold=0.8):
+                      bad_threshold=BAD_THRESHOLD):
     """
     Fitness-aware memory-enhanced FOA.
     """
