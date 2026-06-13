@@ -1,26 +1,24 @@
 """
 ===========================================================
  FILE: foa_memory_v3.py
- MODULE: Hybrid Bloom + Fitness-Aware FOA-Memory V3
+ MODULE: Time-Sensitive Bloom + Fitness-Aware FOA-Memory V3
 ===========================================================
 
 PURPOSE
 -------
 FOA-Memory V3 combines:
 
-1. Bloom Filter:
-   - detects whether a solution is familiar.
+1. Time-Sensitive Bloom Filter:
+   - detects whether a solution is novel or familiar;
+   - allows gradual recovery of novelty over time.
 
 2. Fitness Memory:
    - stores the fitness value of evaluated solutions.
 
 Decision rule:
-    - novel solution        -> evaluate
-    - familiar good solution -> re-evaluate
-    - familiar bad solution  -> skip
-
-This version preserves the biological novelty-detection
-motivation while adding fitness-aware avoidance.
+    - novel solution          -> evaluate
+    - familiar good solution  -> re-evaluate
+    - familiar bad solution   -> skip
 ===========================================================
 """
 
@@ -28,13 +26,16 @@ import numpy as np
 
 from src.foa.population import initialize_population
 from src.foa.movement import update
-
 from src.core.repair import repair_solution
 
-from src.memory.bloom_filter import BloomFilter
+from src.memory.time_sensitive_bloom_filter import TimeSensitiveBloomFilter
 from src.memory.fitness_memory import FitnessMemory
 
-from src.config import USE_QOS, BAD_THRESHOLD
+from src.config import (
+    USE_QOS,
+    BAD_THRESHOLD,
+    BLOOM_FAMILIARITY_THRESHOLD
+)
 
 
 def binarize(X):
@@ -51,34 +52,15 @@ def run_foa_memory_v3(iterations,
                       eta,
                       scenario,
                       fitness_fn,
-                      bad_threshold=BAD_THRESHOLD):
+                      bad_threshold=BAD_THRESHOLD,
+                      familiarity_threshold=BLOOM_FAMILIARITY_THRESHOLD):
     """
-    Hybrid Bloom + Fitness Memory FOA.
-
-    Returns
-    -------
-    best_alpha : ndarray
-        Best allocation matrix.
-
-    best_fit : float
-        Best fitness value.
-
-    best_history : list
-        Best fitness value at each iteration.
-
-    skipped_history : list
-        Number of skipped evaluations per iteration.
-
-    bloom_occupancy_history : list
-        Bloom filter occupancy per iteration.
-
-    memory_size_history : list
-        Number of exact fitness records stored.
+    Hybrid time-sensitive Bloom and fitness-aware FOA.
     """
 
     X = initialize_population(pop_size, N, M)
 
-    bloom = BloomFilter()
+    bloom = TimeSensitiveBloomFilter()
     fitness_memory = FitnessMemory()
 
     best_X = X[0].copy()
@@ -89,16 +71,20 @@ def run_foa_memory_v3(iterations,
     skipped_history = []
     bloom_occupancy_history = []
     memory_size_history = []
+    novelty_history = []
 
     for iteration in range(iterations):
 
+        # Time effect: novelty progressively recovers.
+        bloom.recover()
+
         skipped = 0
+        novelty_values = []
 
         for i in range(pop_size):
 
             alpha = binarize(X[i])
 
-            # MKP + optional QoS repair
             alpha = repair_solution(
                 alpha,
                 scenario["b"],
@@ -109,10 +95,10 @@ def run_foa_memory_v3(iterations,
                 use_qos=USE_QOS
             )
 
-            # ------------------------------------------------
-            # Hybrid memory decision
-            # ------------------------------------------------
-            is_familiar = bloom.contains(alpha)
+            novelty = bloom.novelty_score(alpha)
+            novelty_values.append(novelty)
+
+            is_familiar = novelty < familiarity_threshold
 
             if is_familiar and fitness_memory.contains(alpha):
 
@@ -122,9 +108,6 @@ def run_foa_memory_v3(iterations,
                     skipped += 1
                     continue
 
-            # ------------------------------------------------
-            # Evaluate candidate
-            # ------------------------------------------------
             fit = fitness_fn(
                 alpha,
                 h=scenario["h"],
@@ -135,15 +118,9 @@ def run_foa_memory_v3(iterations,
                 d=scenario["d"]
             )
 
-            # ------------------------------------------------
-            # Update memories
-            # ------------------------------------------------
             bloom.add(alpha)
             fitness_memory.add(alpha, fit)
 
-            # ------------------------------------------------
-            # Update best solution
-            # ------------------------------------------------
             if fit > best_fit:
                 best_fit = fit
                 best_X = X[i].copy()
@@ -154,6 +131,11 @@ def run_foa_memory_v3(iterations,
         bloom_occupancy_history.append(bloom.occupancy())
         memory_size_history.append(fitness_memory.size())
 
+        if len(novelty_values) > 0:
+            novelty_history.append(float(np.mean(novelty_values)))
+        else:
+            novelty_history.append(0.0)
+
         X = update(X, best_X, eta)
 
     return (
@@ -162,5 +144,6 @@ def run_foa_memory_v3(iterations,
         best_history,
         skipped_history,
         bloom_occupancy_history,
-        memory_size_history
+        memory_size_history,
+        novelty_history
     )

@@ -7,6 +7,7 @@
 
 import numpy as np
 
+EXPERIMENT_NAME = "Scenario_01_N20_M10_QoS_ON"
 # ===========================================================
 # REPRODUCIBILITY
 # ===========================================================
@@ -48,7 +49,7 @@ ETA = 0.1
 # ===========================================================
 # EXPERIMENTAL PARAMETERS
 # ===========================================================
-RUNS = 3               # Number of independent runs
+RUNS = 30               # Number of independent runs
 
 # ===========================================================
 # MEMORY PARAMETERS

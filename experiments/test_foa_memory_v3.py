@@ -48,7 +48,8 @@ if __name__ == "__main__":
         history,
         skipped,
         bloom_occupancy,
-        memory_size
+        memory_size,
+        novelty_history
     ) = run_foa_memory_v3(
         iterations=ITERATIONS,
         pop_size=POP_SIZE,
@@ -63,16 +64,17 @@ if __name__ == "__main__":
     print("\n========================================")
     print(" FOA-MEMORY V3 TEST")
     print("========================================")
-    print(f"N                    : {N}")
-    print(f"M                    : {M}")
-    print(f"Population           : {POP_SIZE}")
-    print(f"Iterations           : {ITERATIONS}")
-    print(f"BAD_THRESHOLD        : {BAD_THRESHOLD}")
+    print(f"N                     : {N}")
+    print(f"M                     : {M}")
+    print(f"Population            : {POP_SIZE}")
+    print(f"Iterations            : {ITERATIONS}")
+    print(f"BAD_THRESHOLD         : {BAD_THRESHOLD}")
     print("----------------------------------------")
-    print(f"Best fitness         : {best_fit:.2f}")
-    print(f"History length       : {len(history)}")
-    print(f"Total skipped        : {sum(skipped)}")
-    print(f"Avoidance rate (%)   : {100 * sum(skipped) / (ITERATIONS * POP_SIZE):.2f}")
-    print(f"Final Bloom occupancy: {bloom_occupancy[-1]:.4f}")
-    print(f"Final memory size    : {memory_size[-1]}")
+    print(f"Best fitness          : {best_fit:.2f}")
+    print(f"History length        : {len(history)}")
+    print(f"Total skipped         : {sum(skipped)}")
+    print(f"Avoidance rate (%)    : {100 * sum(skipped) / (ITERATIONS * POP_SIZE):.2f}")
+    print(f"Final Bloom occupancy : {bloom_occupancy[-1]:.4f}")
+    print(f"Final memory size     : {memory_size[-1]}")
+    print(f"Final mean novelty    : {novelty_history[-1]:.4f}")
     print("========================================")

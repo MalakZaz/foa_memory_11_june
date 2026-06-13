@@ -32,4 +32,4 @@ class FitnessMemory:
         return len(self.memory)
 
     def reset(self):
-        self.memory.clear()s
+        self.memory.clear()
