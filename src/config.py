@@ -49,7 +49,7 @@ ETA = 0.3
 # ===========================================================
 # EXPERIMENTAL PARAMETERS
 # ===========================================================
-RUNS = 30               # Number of independent runs
+RUNS = 30              # Number of independent runs
 
 # ===========================================================
 # MEMORY PARAMETERS
@@ -79,3 +79,8 @@ BLOOM_DECAY = 0.5       # aggressive decay for active traces
 BLOOM_RECOVERY = 0.01  # slow recovery toward novelty
 
 BLOOM_FAMILIARITY_THRESHOLD = 0.5
+
+# ==========================================================
+# NICHING PARAMETERS
+# ==========================================================
+NUM_NICHES = 3          # Number of sub-swarms
