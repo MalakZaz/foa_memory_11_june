@@ -42,7 +42,7 @@ def run_pso(iterations,
                 use_qos=USE_QOS
             )
 
-            fit = fitness_fn(alpha, **scenario)
+            fit = fitness_fn(alpha)
 
             if fit > pbest_fit[i]:
                 pbest_fit[i] = fit
@@ -78,5 +78,5 @@ def run_pso(iterations,
         SIGMA2=scenario["SIGMA2"],
         use_qos=True
     )
-
+    gbest_fit = fitness_fn(best_alpha)
     return best_alpha, gbest_fit, history

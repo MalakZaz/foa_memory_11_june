@@ -7,7 +7,7 @@
 
 import numpy as np
 
-EXPERIMENT_NAME = "Scenario_02_N40_M20_QoS_ON"
+EXPERIMENT_NAME = "Scenario_01_N20_M10_QoS_ON"
 # ===========================================================
 # REPRODUCIBILITY
 # ===========================================================
@@ -17,8 +17,8 @@ np.random.seed(SEED)
 # ===========================================================
 # NETWORK PARAMETERS
 # ===========================================================
-N = 40                  # Number of Secondary Users (SUs)
-M = 20                  # Number of Channels (PUs)
+N = 20                  # Number of Secondary Users (SUs)
+M = 10                  # Number of Channels (PUs)
 
 # ===========================================================
 # CHANNEL PARAMETERS
